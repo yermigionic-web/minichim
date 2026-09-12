@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 540">
+<defs><linearGradient id="hair" x1="0" x2="1"><stop stop-color="#715248"/><stop offset="1" stop-color="#3b2d2a"/></linearGradient><linearGradient id="suit" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#5f6667"/><stop offset="1" stop-color="#353b3d"/></linearGradient></defs>
+<rect width="420" height="540" fill="none"/>
+<ellipse cx="210" cy="488" rx="88" ry="18" fill="#000" opacity=".18"/>
+<!-- long hair behind -->
+<path d="M130 142 C128 62 292 46 300 150 C305 223 292 318 265 362 C244 388 177 390 154 360 C125 313 118 215 130 142Z" fill="url(#hair)"/>
+<!-- half-up tail -->
+<path d="M235 78 C282 43 318 70 303 108 C291 137 260 136 246 122Z" fill="#49352f"/>
+<!-- face -->
+<ellipse cx="210" cy="150" rx="63" ry="69" fill="#dfc9ba"/>
+<!-- center-part no bangs -->
+<path d="M146 150 C145 76 200 71 209 76 C177 86 165 109 160 151Z" fill="#4c3832"/>
+<path d="M274 151 C275 78 221 70 211 76 C244 86 256 108 260 151Z" fill="#4c3832"/>
+<!-- sleepy eyes -->
+<path d="M174 154 q17 8 32 0" stroke="#26262a" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M216 154 q17 8 32 0" stroke="#26262a" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M199 182 q11 6 22 0" stroke="#8a5f5d" stroke-width="3" fill="none" stroke-linecap="round"/>
+<!-- neck tattoo -->
+<path d="M228 211 l8 7 -9 6 10 5" stroke="#26262a" stroke-width="3" fill="none" opacity=".8"/>
+<!-- jumpsuit -->
+<path d="M150 238 C169 213 251 213 270 238 L262 365 C246 386 176 386 158 365Z" fill="url(#suit)"/>
+<path d="M210 226 L210 357" stroke="#909696" stroke-width="3" opacity=".6"/><path d="M168 286 h37 v32 h-37Z" fill="#4a5051" opacity=".75"/><path d="M217 286 h36 v32 h-36Z" fill="#4a5051" opacity=".75"/>
+<!-- arms -->
+<path d="M157 252 L107 344" stroke="#dfc9ba" stroke-width="25" stroke-linecap="round"/><path d="M263 252 L313 343" stroke="#dfc9ba" stroke-width="25" stroke-linecap="round"/>
+<path d="M181 360 L145 464" stroke="#343b42" stroke-width="29" stroke-linecap="round"/><path d="M230 360 L270 454" stroke="#343b42" stroke-width="29" stroke-linecap="round"/>
+<circle cx="119" cy="351" r="13" fill="#dfc9ba"/><circle cx="301" cy="351" r="13" fill="#dfc9ba"/>
+<!-- shoes -->
+<path d="M137 465 h54 q7 0 8 14 h-67Z" fill="#17191d"/><path d="M224 465 h60 q6 0 6 14 h-72Z" fill="#17191d"/>
+</svg>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 650">
+<defs><linearGradient id="hair2" x1="0" x2="1"><stop stop-color="#725247"/><stop offset="1" stop-color="#362825"/></linearGradient><linearGradient id="cloth" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#555c5e"/><stop offset="1" stop-color="#272c2e"/></linearGradient></defs><rect width="460" height="650" fill="none"/>
+<!-- long hair --> <path d="M87 201 C72 48 363 38 373 220 C381 379 344 570 278 625 H115 C76 550 65 344 87 201Z" fill="url(#hair2)"/>
+<path d="M280 79 C346 32 407 83 371 139 C347 173 307 151 287 132Z" fill="#49352f"/>
+<!-- neck/shoulder --> <path d="M175 404 h111 l25 96 -170 3Z" fill="#d9c0b1"/><path d="M73 650 C88 515 147 470 229 469 C323 467 395 532 421 650Z" fill="url(#cloth)"/>
+<!-- face --> <ellipse cx="231" cy="245" rx="122" ry="143" fill="#dec7b8"/>
+<!-- no bangs, center part --> <path d="M109 242 C102 96 192 88 229 96 C175 119 148 165 142 249Z" fill="#4a3630"/><path d="M350 244 C353 98 269 89 233 96 C287 120 314 165 320 250Z" fill="#4a3630"/>
+<!-- long side hair --> <path d="M103 224 C89 338 104 495 164 575 L110 603 C63 505 58 350 84 232Z" fill="#3b2b28"/><path d="M358 224 C372 342 351 506 299 584 L352 606 C401 509 407 348 381 232Z" fill="#3b2b28"/>
+<!-- sleepy eyes --> <g fill="none" stroke="#25262a" stroke-width="5" stroke-linecap="round"><path d="M151 231 q26 18 51 0"/><path d="M225 231 q26 18 51 0"/></g>
+<path d="M213 259 q16 9 35 0" stroke="#c19788" stroke-width="3" fill="none"/><g fill="none" stroke="#8b5d5d" stroke-width="4" stroke-linecap="round"><path d="M194 283 q18 15 38 0"/></g>
+<!-- neck tattoo --> <path d="M281 411 l10 9 -11 8 12 7" stroke="#2d3034" stroke-width="4" fill="none"/>
+<!-- hand near hair --> <path d="M347 152 C381 130 410 139 420 170 C428 196 410 216 383 220 L336 217Z" fill="#dec7b8" opacity=".98"/>
+</svg>
