@@ -71,8 +71,8 @@ let pendingId = currentId;
 let onboardMode = 'first';
 const TALK_MIN = 8000;
 const TALK_MAX = 20000;
-const PET_LINE_GAP = 2000;
-const PET_REVERT_MS = 1500;
+const PET_LINE_GAP = 4000;
+const PET_REVERT_MS = 2000;
 const PET_DX = 44;
 const PET_STROKES_PER_TICK = 6;
 
@@ -87,7 +87,10 @@ loadCharState();
 function rand(a) { return a[Math.floor(Math.random() * a.length)]; }
 function hour() { return new Date().getHours(); }
 function playerName() { return String(persona || store.get('wy_persona', '') || '').trim(); }
-function fillPlayer(text) { return String(text ?? '').replaceAll('{player}', playerName()); }
+function fillPlayer(text) {
+  const name = playerName();
+  return String(text ?? '').replaceAll('{player}', name).replaceAll('{user}', name);
+}
 function pickLine(key) {
   const pool = Array.isArray(char.dialogue?.[key]) ? char.dialogue[key] : [];
   if (!pool.length) return '';
@@ -226,7 +229,7 @@ function applyCharacter(id, { resetTrack = true } = {}) {
   closeScreen.setAttribute('aria-label', `${char.name} 가까이 보기`);
   $('#messageHeading').textContent = `${char.name}이 남긴 메시지`;
   $('#todoReaction').textContent = `“다 하면 알려줘요.”`;
-  $('#momentQuote').innerHTML = char.momentQuote;
+  $('#momentQuote').innerHTML = pickMomentQuote();
   bindImg($('#roomBg'), char.assets.roomBackground, '');
   bindImg(characterImg, poseSrc(char.zones[currentZone]?.pose || 'idle'), char.name);
   bindImg(closeImg, char.assets.closeNormal, char.name);
@@ -330,13 +333,32 @@ function updateTime() {
   $('#momentDate').textContent = d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' }).replaceAll('.', '.');
 }
 
+function messageUnlock(m) {
+  if (m.unlock) return m.unlock;
+  if (m.id === 'cat' || m.id === 'gone') return 'visit';
+  if (m.id === 'sleep') return 'night';
+  if (m.id === 'pet') return 'pet';
+  return 'start';
+}
+
 function getMessages() {
-  let unlocked = store.get(ck('messages'), ['welcome', 'food', 'quiet']);
-  if (visitCount >= 2 && !unlocked.includes('cat')) unlocked.push('cat');
-  if (hour() < 4 && !unlocked.includes('sleep')) unlocked.push('sleep');
-  if (petCount >= 5 && !unlocked.includes('pet')) unlocked.push('pet');
+  const startIds = char.messages.filter((m) => messageUnlock(m) === 'start').map((m) => m.id);
+  let unlocked = store.get(ck('messages'), startIds);
+  startIds.forEach((id) => { if (!unlocked.includes(id)) unlocked.push(id); });
+  char.messages.forEach((m) => {
+    const when = messageUnlock(m);
+    if (when === 'visit' && visitCount >= 2 && !unlocked.includes(m.id)) unlocked.push(m.id);
+    if (when === 'night' && hour() < 4 && !unlocked.includes(m.id)) unlocked.push(m.id);
+    if (when === 'pet' && petCount >= 5 && !unlocked.includes(m.id)) unlocked.push(m.id);
+  });
   store.set(ck('messages'), unlocked);
-  return char.messages.filter(m => unlocked.includes(m.id));
+  return char.messages.filter((m) => unlocked.includes(m.id));
+}
+
+function messageLines(m) {
+  if (Array.isArray(m.lines)) return m.lines.map(fillPlayer);
+  if (typeof m.text === 'function') return [m.text(persona)];
+  return [fillPlayer(m.text || '')];
 }
 
 function renderMessages() {
@@ -344,9 +366,10 @@ function renderMessages() {
   list.innerHTML = '';
   bindImg($('#messageHeadImg'), char.assets.idle, char.name);
   getMessages().forEach((m) => {
+    const lines = messageLines(m);
     const div = document.createElement('article');
-    div.className = 'chat-row';
-    div.innerHTML = `<img class="chat-avatar" alt="${escapeHtml(char.name)}"><div class="chat-col"><div class="chat-meta"><strong>${escapeHtml(char.name)}</strong><time>${escapeHtml(m.time)}</time></div><p class="chat-bubble">${escapeHtml(m.text(persona))}</p></div>`;
+    div.className = 'chat-group';
+    div.innerHTML = `<div class="chat-row"><img class="chat-avatar" alt="${escapeHtml(char.name)}"><div class="chat-col"><div class="chat-meta"><strong>${escapeHtml(char.name)}</strong><time>${escapeHtml(m.time)}</time></div>${lines.map((line) => `<p class="chat-bubble">${escapeHtml(line)}</p>`).join('')}</div></div>`;
     bindImg(div.querySelector('img'), char.assets.idle, char.name);
     list.appendChild(div);
   });
@@ -379,9 +402,7 @@ function renderTodos() {
       ts[i].done = e.target.checked;
       saveTodos(ts);
       if (became) {
-        const line = pickLine('todoComplete');
-        $('#todoReaction').textContent = `“${line}”`;
-        showToast(`${char.name}: “${line}”`);
+        $('#todoReaction').textContent = `“${pickLine('todoComplete')}”`;
       }
     });
     row.querySelector('.delete-todo').addEventListener('click', () => {
@@ -446,10 +467,20 @@ function setTrack(i) {
   if (changed) maybeMusicReaction();
 }
 
+function pickMomentQuote() {
+  const pool = Array.isArray(char.momentQuotes) && char.momentQuotes.length
+    ? char.momentQuotes
+    : [char.momentQuote];
+  return fillPlayer(rand(pool.filter(Boolean)) || '');
+}
+
 function updateMoment() {
   const d = new Date();
-  const line = rand(char.moments);
-  $('#momentCaption').innerHTML = `${d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}<br>${line}`;
+  const pool = char.moments || [];
+  const line = fillPlayer(rand(pool) || '');
+  $('#momentCaption').innerHTML = `${d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}<br>${escapeHtml(line)}`;
+  $('#momentQuote').innerHTML = pickMomentQuote();
+  bindImg($('#momentImg'), poseSrc(rand(['sit', 'idle', 'window', 'sleep'])), `방 안의 ${char.name}`);
   const moments = store.get(ck('moments'), []);
   moments.unshift({ time: Date.now(), text: line });
   store.set(ck('moments'), moments.slice(0, 20));
