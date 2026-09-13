@@ -314,6 +314,8 @@ html.skip-onboard #onboarding{display:none!important}
 }
 
 .moment-date{font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:15px;font-weight:600;color:#4E5968;margin:4px 0 18px}
+.moment-empty{margin:36px 8px 0;text-align:center;color:#8B95A1;font-size:14px;line-height:1.6}
+.moment-list{display:flex;flex-direction:column;gap:22px}
 .polaroid{
   width:100%;margin:0;transform:none;background:#fff;color:#191F28;
   padding:12px 12px 16px;border-radius:20px;

@@ -188,7 +188,7 @@
           <img id="messageHeadImg" class="chat-head-avatar" alt="" />
           <div>
             <strong id="messageHeading">남긴 메시지</strong>
-            <small>접속과 행동에 따라 조금씩 늘어납니다.</small>
+            <small id="messageHint">처음엔 한 통이에요. 12시간마다 하나씩 더 와요.</small>
           </div>
         </div>
         <div id="messageList" class="message-list chat-thread"></div>
@@ -205,14 +205,9 @@
 
       <div id="momentPanel" class="panel-content moment-panel hidden">
         <div class="moment-date" id="momentDate"></div>
-        <div class="polaroid">
-          <div class="polaroid-scene">
-            <div class="mini-room"></div>
-            <img id="momentImg" alt="" />
-          </div>
-          <p id="momentCaption"></p>
-        </div>
-        <blockquote id="momentQuote">“별 거 아닌 순간들이,<br>조금은 특별해지는 곳.”</blockquote>
+        <p id="momentEmpty" class="moment-empty">아직 찍힌 순간이 없어요. 3시간마다 하나씩 생겨요.</p>
+        <div id="momentList" class="moment-list"></div>
+        <blockquote id="momentQuote" class="hidden"></blockquote>
       </div>
     </section>
 

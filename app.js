@@ -67,20 +67,54 @@ let closeSessionPets = 0;
 let lastPetLineAt = 0;
 let closeStage = 0;
 let petIdleTimer = null;
+let pettingMs = 0;
+let petClockAt = 0;
+let isPetting = false;
+let petRaf = 0;
 let pendingId = currentId;
 let onboardMode = 'first';
 const TALK_MIN = 8000;
 const TALK_MAX = 20000;
 const PET_LINE_GAP = 4000;
+const PET_STAGE_MS = 4000;
 const PET_REVERT_MS = 2000;
 const PET_DX = 44;
 const PET_STROKES_PER_TICK = 6;
+const MSG_INTERVAL_MS = 12 * 60 * 60 * 1000;
+const MOMENT_INTERVAL_MS = 3 * 60 * 60 * 1000;
 
 function ck(key) { return `wy_${currentId}_${key}`; }
+function inboxElapsedOverride() {
+  const raw = new URLSearchParams(location.search).get('elapsedHours');
+  const hours = raw == null ? NaN : Number(raw);
+  return Number.isFinite(hours) && hours >= 0 ? hours * 60 * 60 * 1000 : null;
+}
+function ensureInboxClock() {
+  if (store.get(ck('inbox_v'), 0) < 2) {
+    store.set(ck('inbox_v'), 2);
+    localStorage.removeItem(ck('messages'));
+    localStorage.removeItem(ck('album'));
+    store.set(ck('message_seen_count'), 0);
+    store.set(ck('message_seen'), false);
+    store.set(ck('known_since'), Date.now());
+  }
+  if (store.get(ck('known_since'), null) == null) store.set(ck('known_since'), Date.now());
+  const forced = inboxElapsedOverride();
+  if (forced != null) store.set(ck('known_since'), Date.now() - forced);
+}
+function knownMs() {
+  const forced = inboxElapsedOverride();
+  if (forced != null) return forced;
+  return Math.max(0, Date.now() - (store.get(ck('known_since'), Date.now()) || Date.now()));
+}
+function unlockedCount(intervalMs, initial, max) {
+  return Math.min(max, initial + Math.floor(knownMs() / intervalMs));
+}
 function loadCharState() {
   visitCount = store.get(ck('visits'), 0);
   petCount = store.get(ck('pet_count'), 0);
   lastVisit = store.get(ck('last_visit'), null);
+  ensureInboxClock();
 }
 loadCharState();
 
@@ -228,13 +262,15 @@ function applyCharacter(id, { resetTrack = true } = {}) {
   character.setAttribute('aria-label', `${char.name} 터치하기`);
   closeScreen.setAttribute('aria-label', `${char.name} 가까이 보기`);
   $('#messageHeading').textContent = `${char.name}이 남긴 메시지`;
-  $('#todoReaction').textContent = `“다 하면 알려줘요.”`;
-  $('#momentQuote').innerHTML = pickMomentQuote();
+  const hint = $('#messageHint');
+  if (hint) hint.textContent = '처음엔 한 통이에요. 12시간마다 하나씩 더 와요.';
+  $('#todoReaction').textContent = `“${fillPlayer(char.todoHint || '다 하면 알려줘요.')}”`;
   bindImg($('#roomBg'), char.assets.roomBackground, '');
   bindImg(characterImg, poseSrc(char.zones[currentZone]?.pose || 'idle'), char.name);
   bindImg(closeImg, char.assets.closeNormal, char.name);
   bindImg($('#todoCharacterImg'), char.assets.idle, char.name);
-  bindImg($('#momentImg'), char.assets.sit, `방 안의 ${char.name}`);
+  seedTodos();
+  renderTodos();
   character.style.left = (char.zones[currentZone]?.left ?? 50) + '%';
   character.style.top = (char.zones[currentZone]?.top ?? 64) + '%';
   $('#statusText').textContent = char.zones[currentZone]?.state || '방에 있는 중';
@@ -333,26 +369,9 @@ function updateTime() {
   $('#momentDate').textContent = d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', weekday: 'short' }).replaceAll('.', '.');
 }
 
-function messageUnlock(m) {
-  if (m.unlock) return m.unlock;
-  if (m.id === 'cat' || m.id === 'gone') return 'visit';
-  if (m.id === 'sleep') return 'night';
-  if (m.id === 'pet') return 'pet';
-  return 'start';
-}
-
 function getMessages() {
-  const startIds = char.messages.filter((m) => messageUnlock(m) === 'start').map((m) => m.id);
-  let unlocked = store.get(ck('messages'), startIds);
-  startIds.forEach((id) => { if (!unlocked.includes(id)) unlocked.push(id); });
-  char.messages.forEach((m) => {
-    const when = messageUnlock(m);
-    if (when === 'visit' && visitCount >= 2 && !unlocked.includes(m.id)) unlocked.push(m.id);
-    if (when === 'night' && hour() < 4 && !unlocked.includes(m.id)) unlocked.push(m.id);
-    if (when === 'pet' && petCount >= 5 && !unlocked.includes(m.id)) unlocked.push(m.id);
-  });
-  store.set(ck('messages'), unlocked);
-  return char.messages.filter((m) => unlocked.includes(m.id));
+  const all = char.messages || [];
+  return all.slice(0, unlockedCount(MSG_INTERVAL_MS, 1, all.length));
 }
 
 function messageLines(m) {
@@ -373,19 +392,29 @@ function renderMessages() {
     bindImg(div.querySelector('img'), char.assets.idle, char.name);
     list.appendChild(div);
   });
-  const seen = store.get(ck('message_seen'), false);
-  $('#messageBadge').classList.toggle('hidden', seen || getMessages().length === 0);
+  const unlocked = getMessages().length;
+  const seen = store.get(ck('message_seen_count'), 0);
+  $('#messageBadge').classList.toggle('hidden', unlocked <= seen);
 }
 
 function loadTodos() { return store.get('wy_todos', []); }
 function saveTodos(v) { store.set('wy_todos', v); renderTodos(); }
-function seedTodos() {
-  const next = [{ text: '목표를 추가한 뒤, 체크해서 지우기!', done: false }];
+function allTodoSeeds() {
+  return [
+    '목표를 추가한 뒤, 체크해서 지우기!',
+    ...Object.values(CHARACTERS).map((c) => c.todoSeed).filter(Boolean)
+  ];
+}
+function isTutorialTodos(list) {
   const oldSeed = ['물 마시기', '작업 1시간', '원고 500자', '방 정리하기'];
+  if (!list.length) return true;
+  if (list.length === 4 && list.every((t, i) => t.text === oldSeed[i])) return true;
+  return list.length === 1 && allTodoSeeds().includes(list[0].text);
+}
+function seedTodos() {
   const current = loadTodos();
-  const isOldExample = current.length === 4 && current.every((t, i) => t.text === oldSeed[i]);
-  if (!store.get('wy_todos_seeded', false) || isOldExample) {
-    store.set('wy_todos', next);
+  if (!store.get('wy_todos_seeded', false) || isTutorialTodos(current)) {
+    store.set('wy_todos', [{ text: fillPlayer(char.todoSeed || '할 일을 적어 보세요.'), done: false }]);
     store.set('wy_todos_seeded', true);
   }
 }
@@ -474,16 +503,56 @@ function pickMomentQuote() {
   return fillPlayer(rand(pool.filter(Boolean)) || '');
 }
 
-function updateMoment() {
-  const d = new Date();
+function formatMomentStamp(ts) {
+  return new Date(ts).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function syncAlbum() {
   const pool = char.moments || [];
-  const line = fillPlayer(rand(pool) || '');
-  $('#momentCaption').innerHTML = `${d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false })}<br>${escapeHtml(line)}`;
-  $('#momentQuote').innerHTML = pickMomentQuote();
-  bindImg($('#momentImg'), poseSrc(rand(['sit', 'idle', 'window', 'sleep'])), `방 안의 ${char.name}`);
-  const moments = store.get(ck('moments'), []);
-  moments.unshift({ time: Date.now(), text: line });
-  store.set(ck('moments'), moments.slice(0, 20));
+  const want = unlockedCount(MOMENT_INTERVAL_MS, 0, pool.length);
+  let saved = store.get(ck('album'), []);
+  const used = new Set(saved.map((item) => item.source || item.text));
+  while (saved.length < want && pool.length) {
+    const unused = pool.filter((line) => !used.has(line));
+    const source = unused.length ? rand(unused) : rand(pool);
+    used.add(source);
+    saved.push({
+      time: Date.now(),
+      source,
+      text: fillPlayer(source),
+      pose: rand(['sit', 'idle', 'window', 'sleep']),
+      quote: pickMomentQuote()
+    });
+  }
+  if (saved.length > want) saved = saved.slice(0, want);
+  store.set(ck('album'), saved);
+  return saved;
+}
+
+function renderMoment() {
+  const items = syncAlbum();
+  const list = $('#momentList');
+  const empty = $('#momentEmpty');
+  const quote = $('#momentQuote');
+  if (list) list.innerHTML = '';
+  if (!items.length) {
+    if (empty) empty.classList.remove('hidden');
+    if (quote) quote.classList.add('hidden');
+    return;
+  }
+  if (empty) empty.classList.add('hidden');
+  if (quote) {
+    quote.classList.remove('hidden');
+    quote.innerHTML = items[items.length - 1].quote || pickMomentQuote();
+  }
+  items.forEach((item, i) => {
+    const card = document.createElement('div');
+    card.className = 'polaroid';
+    card.style.transform = `rotate(${i % 2 ? 1.1 : -1.1}deg)`;
+    card.innerHTML = `<div class="polaroid-scene"><div class="mini-room"></div><img alt=""></div><p>${escapeHtml(formatMomentStamp(item.time))}<br>${escapeHtml(item.text)}</p>`;
+    bindImg(card.querySelector('img'), poseSrc(item.pose || 'sit'), `방 안의 ${char.name}`);
+    list.appendChild(card);
+  });
 }
 
 function hideOnboardSteps() {
@@ -666,12 +735,51 @@ function applyCloseStage(stage, { speak = false } = {}) {
     closeLine.textContent = `“${pickLine(key)}”`;
   }
 }
+function flushPetClock() {
+  if (!isPetting || !petClockAt) return;
+  const now = Date.now();
+  pettingMs += now - petClockAt;
+  petClockAt = now;
+  const cap = (closeStage + 1) * PET_STAGE_MS;
+  if (closeStage < 2 && pettingMs > cap) pettingMs = cap;
+}
+function startPetClock() {
+  if (isPetting) return;
+  isPetting = true;
+  petClockAt = Date.now();
+  if (!petRaf) petRaf = requestAnimationFrame(tickPetClock);
+}
+function stopPetClock() {
+  flushPetClock();
+  isPetting = false;
+  petClockAt = 0;
+  if (petRaf) {
+    cancelAnimationFrame(petRaf);
+    petRaf = 0;
+  }
+}
+function tickPetClock() {
+  if (!isPetting) { petRaf = 0; return; }
+  syncPetStage();
+  petRaf = requestAnimationFrame(tickPetClock);
+}
+function syncPetStage() {
+  flushPetClock();
+  if (closeStage < 2 && pettingMs >= (closeStage + 1) * PET_STAGE_MS) {
+    applyCloseStage(closeStage + 1, { speak: true });
+    lastPetLineAt = Date.now();
+  } else if (closeStage === 2 && Date.now() - lastPetLineAt >= PET_LINE_GAP) {
+    applyCloseStage(2, { speak: true });
+    lastPetLineAt = Date.now();
+  }
+}
 function holdPetRevert() { clearTimeout(petIdleTimer); }
 function armPetRevert() {
   clearTimeout(petIdleTimer);
   petIdleTimer = setTimeout(() => {
     if (closeStage > 0) {
       applyCloseStage(closeStage - 1);
+      pettingMs = closeStage * PET_STAGE_MS;
       armPetRevert();
     }
   }, PET_REVERT_MS);
@@ -679,6 +787,10 @@ function armPetRevert() {
 function openClose() {
   closeSessionPets = 0;
   lastPetLineAt = 0;
+  pettingMs = 0;
+  petClockAt = 0;
+  isPetting = false;
+  if (petRaf) { cancelAnimationFrame(petRaf); petRaf = 0; }
   lastX = null;
   stroke = 0;
   holdPetRevert();
@@ -689,12 +801,8 @@ function petFeedback(x, y) {
   petCount += 1;
   closeSessionPets += 1;
   store.set(ck('pet_count'), petCount);
-  const now = Date.now();
-  if (now - lastPetLineAt >= PET_LINE_GAP) {
-    lastPetLineAt = now;
-    const next = closeSessionPets >= 8 ? 2 : closeSessionPets >= 3 ? 1 : 0;
-    applyCloseStage(next, { speak: true });
-  }
+  startPetClock();
+  syncPetStage();
   const h = document.createElement('span');
   h.className = 'heart';
   h.textContent = '♥';
@@ -703,7 +811,6 @@ function petFeedback(x, y) {
   h.style.top = (y - rect.top) + 'px';
   $('#hearts').appendChild(h);
   setTimeout(() => h.remove(), 1200);
-  if (petCount === 5) renderMessages();
 }
 
 function openPanel(name) {
@@ -713,11 +820,12 @@ function openPanel(name) {
   panel.classList.remove('hidden');
   if (name === 'listen') renderListen();
   if (name === 'message') {
+    store.set(ck('message_seen_count'), getMessages().length);
     store.set(ck('message_seen'), true);
     $('#messageBadge').classList.add('hidden');
     renderMessages();
   }
-  if (name === 'moment') updateMoment();
+  if (name === 'moment') renderMoment();
 }
 
 $('#startBtn').addEventListener('click', showNameStep);
@@ -756,6 +864,7 @@ $('#resetDataBtn').addEventListener('click', () => {
 });
 character.addEventListener('click', openClose);
 $('#closeBack').addEventListener('click', () => {
+  stopPetClock();
   holdPetRevert();
   closeScreen.classList.add('hidden');
 });
@@ -813,10 +922,13 @@ petZone.addEventListener('pointerdown', (e) => {
   lastX = e.clientX;
   stroke = 0;
   holdPetRevert();
+  startPetClock();
 });
 petZone.addEventListener('pointermove', (e) => {
   if (lastX === null) return;
   holdPetRevert();
+  startPetClock();
+  syncPetStage();
   const dx = Math.abs(e.clientX - lastX);
   if (dx > PET_DX) {
     stroke += 1;
@@ -827,6 +939,7 @@ petZone.addEventListener('pointermove', (e) => {
 ['pointerup', 'pointercancel'].forEach((ev) => petZone.addEventListener(ev, () => {
   lastX = null;
   stroke = 0;
+  stopPetClock();
   armPetRevert();
 }));
 
