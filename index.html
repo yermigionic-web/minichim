@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#efe8d8" />
+  <meta name="theme-color" content="#F7EFE2" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>My Chenzheng Home</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -22,27 +22,32 @@
   <div class="desktop-backdrop" aria-hidden="true"></div>
   <div id="app" class="phone-shell">
     <section id="onboarding" class="screen onboard-screen" aria-label="처음 인사">
+      <div class="onboard-paper" aria-hidden="true"></div>
       <div class="onboard-grain" aria-hidden="true"></div>
-      <div class="onboard-icons" aria-hidden="true"></div>
+      <div class="onboard-lamp" aria-hidden="true"></div>
 
       <div id="splashStep" class="onboard-step splash-step">
         <p class="onboard-brand">沈錚</p>
-        <h1 class="home-logo"><span>My Chenzheng</span><em>Home</em></h1>
+        <h1 class="splash-logo">
+          <img src="assets/minichim_mainlogo.png" alt="My Chenzheng Home" />
+        </h1>
         <p class="home-sub">오늘은 누구와 같이 있을까요?</p>
-        <button id="startBtn" class="pill-btn" type="button">START</button>
+        <button id="startBtn" class="pill-btn start-btn" type="button">시작하기</button>
       </div>
 
       <div id="nameStep" class="onboard-step name-step hidden">
+        <img class="mini-logo" src="assets/minichim_mainlogo.png" alt="" />
         <p class="onboard-progress">01 / 02</p>
         <h2 class="onboard-title">당신을 뭐라고 부를까요?</h2>
-        <p class="onboard-help">캐릭터가 이 이름으로 당신을 부릅니다.</p>
+        <p class="onboard-help">이 이름으로 방 안의 사람이 당신을 불러요.</p>
         <input id="personaName" maxlength="16" autocomplete="off" enterkeyhint="done" placeholder="이름을 입력해 주세요" />
         <p id="namePreview" class="name-preview"></p>
-        <button id="nameNextBtn" class="pill-btn" type="button" disabled>다음</button>
+        <button id="nameNextBtn" class="pill-btn" type="button" disabled>다음으로</button>
       </div>
 
       <div id="characterStep" class="onboard-step character-step hidden">
         <button id="switcherBack" class="onboard-back hidden" type="button">‹</button>
+        <img class="mini-logo" src="assets/minichim_mainlogo.png" alt="" />
         <p class="onboard-progress">02 / 02</p>
         <h2 class="onboard-title">오늘은 누구와 같이 있을까요?</h2>
         <p class="onboard-help">나중에 언제든 바꿀 수 있어요.</p>
@@ -128,7 +133,7 @@
 
     <section id="closeScreen" class="screen close-screen hidden" aria-label="가까이 보기">
       <div class="close-gradient"></div>
-      <button id="closeBack" class="round-close" aria-label="돌아가기">×</button>
+      <button id="closeBack" class="ios-close" aria-label="돌아가기">×</button>
       <div class="close-bubble"><p id="closeLine">“……왜요. 싫진 않은데.”</p></div>
       <div class="close-art-wrap">
         <img id="closeImg" src="assets/characters/geonmyeong/close_normal.png" alt="" />
@@ -141,37 +146,47 @@
     <section id="panel" class="panel-screen hidden" aria-label="위젯 패널">
       <header class="panel-header">
         <button id="panelBack" class="panel-back" aria-label="닫기">‹</button>
-        <strong id="panelTitle">LISTEN</strong>
+        <strong id="panelTitle">앨범</strong>
         <button id="resetBtn" class="panel-menu" aria-label="설정">⋯</button>
       </header>
 
       <div id="listenPanel" class="panel-content listen-panel hidden">
-        <div class="album-art">
-          <img id="albumArt" alt="" />
-        </div>
-        <div class="track-title" id="trackTitle"></div>
-        <div class="track-artist" id="trackArtist"></div>
-        <div class="track-index" id="trackIndex">1/4</div>
-        <div class="seek"><span id="currentTime">0:00</span><div class="progress"><div id="progressBar"></div></div><span id="duration">0:00</span></div>
-        <div class="player-controls">
-          <button id="prevBtn" type="button" aria-label="이전곡">Ⅰ◀</button>
-          <button id="playBtn" class="play-main" type="button">▶</button>
-          <button id="nextBtn" type="button" aria-label="다음곡">▶Ⅰ</button>
+        <div class="now-card">
+          <div class="album-art">
+            <img id="albumArt" alt="" />
+          </div>
+          <div class="track-copy">
+            <div class="track-title" id="trackTitle"></div>
+            <div class="track-artist" id="trackArtist"></div>
+            <div class="track-index" id="trackIndex">1/4</div>
+          </div>
+          <div class="seek"><span id="currentTime">0:00</span><div class="progress"><div id="progressBar"></div></div><span id="duration">0:00</span></div>
+          <div class="player-controls">
+            <button id="prevBtn" type="button" aria-label="이전곡">‹‹</button>
+            <button id="playBtn" class="play-main" type="button">▶</button>
+            <button id="nextBtn" type="button" aria-label="다음곡">››</button>
+          </div>
         </div>
         <audio id="audio" preload="metadata"></audio>
-        <div class="track-list" id="trackList"></div>
+        <div class="track-list ios-group" id="trackList"></div>
         <p id="musicState" class="panel-hint">트랙을 바꾸거나 재생할 수 있습니다.</p>
       </div>
 
       <div id="messagePanel" class="panel-content message-panel hidden">
-        <div class="message-heading"><span id="messageHeading">남긴 메시지</span><small>접속과 행동에 따라 조금씩 늘어납니다.</small></div>
-        <div id="messageList" class="message-list"></div>
+        <div class="chat-head">
+          <img id="messageHeadImg" class="chat-head-avatar" alt="" />
+          <div>
+            <strong id="messageHeading">남긴 메시지</strong>
+            <small>접속과 행동에 따라 조금씩 늘어납니다.</small>
+          </div>
+        </div>
+        <div id="messageList" class="message-list chat-thread"></div>
       </div>
 
       <div id="todoPanel" class="panel-content todo-panel hidden">
-        <form id="todoForm" class="todo-form"><input id="todoInput" maxlength="40" placeholder="＋ 할 일 추가하기" /></form>
-        <div id="todoList" class="todo-list"></div>
-        <div class="todo-character">
+        <form id="todoForm" class="todo-form"><input id="todoInput" maxlength="40" placeholder="할 일 추가" /></form>
+        <div id="todoList" class="todo-list ios-group"></div>
+        <div class="todo-note">
           <img id="todoCharacterImg" alt="" />
           <div id="todoReaction">“다 하면 알려줘요.”</div>
         </div>

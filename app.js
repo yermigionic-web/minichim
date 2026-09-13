@@ -56,13 +56,22 @@ let panelName = null;
 let speechTimer = null;
 let moveTimer = null;
 let moveEndTimer = null;
-let walkFrameTimer = null;
+let talkTimer = null;
 let visitCount = 0;
 let petCount = 0;
 let lastVisit = null;
 let lastSpoken = '';
+let lastTalkAt = 0;
+let lastWalkSrc = '';
+let closeSessionPets = 0;
+let lastPetLineAt = 0;
 let pendingId = currentId;
 let onboardMode = 'first';
+const TALK_MIN = 8000;
+const TALK_MAX = 20000;
+const PET_LINE_GAP = 600;
+const PET_DX = 44;
+const PET_STROKES_PER_TICK = 6;
 
 function ck(key) { return `wy_${currentId}_${key}`; }
 function loadCharState() {
@@ -148,15 +157,20 @@ function applyNamePlate(c) {
 function movementTiming() {
   const b = char.behavior || {};
   if (b.moveMin != null && b.moveMax != null) {
-    return { moveMin: b.moveMin, moveMax: b.moveMax, talkChance: b.talkChance ?? b.movementFrequency ?? 0.5 };
+    return { moveMin: b.moveMin, moveMax: b.moveMax, talkChance: b.talkChance ?? b.movementFrequency ?? 0.28 };
   }
-  const ranges = { slow: [12000, 22000], medium: [7600, 16600], fast: [4200, 9000] };
+  const ranges = { slow: [16000, 28000], medium: [12000, 22000], fast: [9000, 16000] };
   const [moveMin, moveMax] = ranges[b.moveInterval] || ranges.medium;
-  return { moveMin, moveMax, talkChance: b.movementFrequency ?? 0.5 };
+  return { moveMin, moveMax, talkChance: b.movementFrequency ?? 0.28 };
+}
+
+function isSpecialZone(z) {
+  return z && (z.pose === 'sit' || z.pose === 'sleep' || z.pose === 'window' || z.pose === 'special');
 }
 
 function zonePickWeight(name, z) {
   const b = char.behavior || {};
+  if (z.pose === 'special' && b.randomActionWeight != null) return b.randomActionWeight;
   if (name === 'window' && b.windowWeight != null) return b.windowWeight;
   if (name === 'desk' && b.deskWeight != null) return b.deskWeight;
   if ((name === 'bed' || z.pose === 'sleep') && b.sleepWeight != null) return b.sleepWeight;
@@ -167,18 +181,28 @@ function zonePickWeight(name, z) {
 
 function poseSrc(pose) {
   const a = char.assets;
-  return ({ idle: a.idle, sit: a.sit, sleep: a.sleep || a.sit, window: a.window || a.idle }[pose]) || a.idle;
+  return ({ idle: a.idle, sit: a.sit, sleep: a.sleep || a.sit, window: a.window || a.idle, special: a.special || a.idle }[pose]) || a.idle;
 }
 
-function pickZone(except) {
-  const entries = Object.entries(char.zones).filter(([name]) => name !== except);
+function pickWeighted(entries) {
   const total = entries.reduce((sum, [name, z]) => sum + zonePickWeight(name, z), 0);
-  let roll = Math.random() * total;
+  let roll = Math.random() * Math.max(total, 0.0001);
   for (const [name, z] of entries) {
     roll -= zonePickWeight(name, z);
     if (roll <= 0) return name;
   }
   return entries[0][0];
+}
+
+function pickZone(except) {
+  const entries = Object.entries(char.zones).filter(([name]) => name !== except);
+  if (!entries.length) return except;
+  const idle = entries.filter(([, z]) => !isSpecialZone(z));
+  const specials = entries.filter(([, z]) => isSpecialZone(z));
+  const chance = char.behavior?.specialChance ?? 0.14;
+  const useSpecial = specials.length && Math.random() < chance;
+  const pool = useSpecial ? specials : (idle.length ? idle : entries);
+  return pickWeighted(pool);
 }
 
 function applyCharacter(id, { resetTrack = true } = {}) {
@@ -216,9 +240,15 @@ function contextualTalk() {
   return pickLine((hour() >= 0 && hour() < 5) ? 'lateNight' : 'idle');
 }
 
-function say(text, duration = 3300) {
+function canAutoTalk() {
+  return Date.now() - lastTalkAt >= TALK_MIN;
+}
+
+function say(text, duration = 3300, { force = false } = {}) {
   const spoken = fillPlayer(text);
   if (!spoken) return;
+  if (!force && !canAutoTalk()) return;
+  lastTalkAt = Date.now();
   clearTimeout(speechTimer);
   speech.textContent = spoken;
   const room = $('#room');
@@ -232,44 +262,58 @@ function say(text, duration = 3300) {
   speechTimer = setTimeout(() => speech.classList.add('hidden'), duration);
 }
 
-function startWalkFrames() {
-  let frame = 0;
-  bindImg(characterImg, char.assets.walk1, char.name);
-  clearInterval(walkFrameTimer);
-  walkFrameTimer = setInterval(() => {
-    frame ^= 1;
-    bindImg(characterImg, frame ? char.assets.walk2 : char.assets.walk1, char.name);
-  }, 280);
+function currentCharPos() {
+  return {
+    left: parseFloat(character.style.left) || (char.zones[currentZone]?.left ?? 50),
+    top: parseFloat(character.style.top) || (char.zones[currentZone]?.top ?? 64)
+  };
 }
-function stopWalkFrames() {
-  clearInterval(walkFrameTimer);
-  walkFrameTimer = null;
+
+function walkSrcForDelta(dx) {
+  if (dx < -0.8) return char.assets.walk1;
+  if (dx > 0.8) return char.assets.walk2;
+  return lastWalkSrc || char.assets.walk2;
+}
+
+function startWalk(dx) {
+  const src = walkSrcForDelta(dx);
+  lastWalkSrc = src;
+  bindImg(characterImg, src, char.name);
 }
 
 function moveTo(name) {
   const z = char.zones[name];
   if (!z) return;
+  const from = currentCharPos();
   currentZone = name;
   character.classList.add('walking');
-  startWalkFrames();
+  startWalk(z.left - from.left);
   character.style.left = z.left + '%';
   character.style.top = z.top + '%';
   $('#statusText').textContent = '이동 중';
   clearTimeout(moveEndTimer);
   moveEndTimer = setTimeout(() => {
     character.classList.remove('walking');
-    stopWalkFrames();
     bindImg(characterImg, poseSrc(z.pose), char.name);
     $('#statusText').textContent = z.state;
   }, 2100);
 }
 
+function scheduleTalk() {
+  clearTimeout(talkTimer);
+  const wait = TALK_MIN + Math.random() * (TALK_MAX - TALK_MIN);
+  talkTimer = setTimeout(() => {
+    const chance = movementTiming().talkChance;
+    if (canAutoTalk() && Math.random() < chance) say(contextualTalk());
+    scheduleTalk();
+  }, wait);
+}
+
 function scheduleMovement() {
   clearTimeout(moveTimer);
-  const { moveMin, moveMax, talkChance } = movementTiming();
+  const { moveMin, moveMax } = movementTiming();
   moveTimer = setTimeout(() => {
     moveTo(pickZone(currentZone));
-    if (Math.random() > (1 - talkChance)) setTimeout(() => say(contextualTalk()), 2450);
     scheduleMovement();
   }, moveMin + Math.random() * (moveMax - moveMin));
 }
@@ -293,10 +337,11 @@ function getMessages() {
 function renderMessages() {
   const list = $('#messageList');
   list.innerHTML = '';
+  bindImg($('#messageHeadImg'), char.assets.idle, char.name);
   getMessages().forEach((m) => {
     const div = document.createElement('article');
-    div.className = 'message-card';
-    div.innerHTML = `<img alt="${escapeHtml(char.name)}"><div class="message-body"><strong>${escapeHtml(char.name)}</strong><p>${escapeHtml(m.text(persona))}</p></div><time>${escapeHtml(m.time)}</time>`;
+    div.className = 'chat-row';
+    div.innerHTML = `<img class="chat-avatar" alt="${escapeHtml(char.name)}"><div class="chat-col"><div class="chat-meta"><strong>${escapeHtml(char.name)}</strong><time>${escapeHtml(m.time)}</time></div><p class="chat-bubble">${escapeHtml(m.text(persona))}</p></div>`;
     bindImg(div.querySelector('img'), char.assets.idle, char.name);
     list.appendChild(div);
   });
@@ -323,7 +368,7 @@ function renderTodos() {
   loadTodos().forEach((t, i) => {
     const row = document.createElement('div');
     row.className = 'todo-item' + (t.done ? ' done' : '');
-    row.innerHTML = `<input type="checkbox" ${t.done ? 'checked' : ''} aria-label="완료"><span>${escapeHtml(t.text)}</span><button class="delete-todo" aria-label="삭제">×</button>`;
+    row.innerHTML = `<label class="ios-check"><input type="checkbox" ${t.done ? 'checked' : ''} aria-label="완료"><i></i></label><span>${escapeHtml(t.text)}</span><button class="delete-todo" aria-label="삭제">×</button>`;
     row.querySelector('input').addEventListener('change', (e) => {
       const ts = loadTodos();
       const became = !ts[i].done;
@@ -415,7 +460,7 @@ function applyNeutralTheme() {
   root.style.setProperty('--char-secondary', '#314034');
   root.style.setProperty('--char-accent', '#A54E43');
   root.style.setProperty('--char-warm', '#C18A52');
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', '#efe8d8');
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', '#F7EFE2');
   onboarding.classList.remove('is-themed');
 }
 function showSplash() {
@@ -516,7 +561,7 @@ function openCharacterSwitcher() {
   pendingId = currentId;
   clearTimeout(moveTimer);
   clearTimeout(moveEndTimer);
-  stopWalkFrames();
+  clearTimeout(talkTimer);
   audio.pause();
   play.textContent = '▶';
   panel.classList.add('hidden');
@@ -530,6 +575,7 @@ function returnToRoomFromSwitcher() {
   hideOnboarding();
   roomScreen.classList.remove('hidden');
   scheduleMovement();
+  scheduleTalk();
 }
 function openSettings() {
   $('#settingsSheet').classList.remove('hidden');
@@ -569,20 +615,28 @@ function enterRoom({ greetDelay = 700 } = {}) {
   renderTodos();
   updateTime();
   scheduleMovement();
+  scheduleTalk();
   const away = prevVisit && (Date.now() - prevVisit) > 1000 * 60 * 60 * 24 * 2;
-  setTimeout(() => say(away ? pickLine('returning') : pickLine('greeting')), greetDelay);
+  setTimeout(() => say(away ? pickLine('returning') : pickLine('greeting'), 3300, { force: true }), greetDelay);
 }
 
 function openClose() {
+  closeSessionPets = 0;
+  lastPetLineAt = 0;
+  lastX = null;
+  stroke = 0;
   closeScreen.classList.remove('hidden');
   bindImg(closeImg, char.assets.closeNormal, char.name);
   closeLine.textContent = `“${pickLine('petNormal')}”`;
 }
 function petFeedback(x, y) {
   petCount += 1;
+  closeSessionPets += 1;
   store.set(ck('pet_count'), petCount);
-  if (petCount % 3 === 0) {
-    const key = petCount >= 12 ? 'petHappy' : petCount >= 6 ? 'petSoft' : 'petNormal';
+  const now = Date.now();
+  if (now - lastPetLineAt >= PET_LINE_GAP) {
+    lastPetLineAt = now;
+    const key = closeSessionPets >= 22 ? 'petHappy' : closeSessionPets >= 10 ? 'petSoft' : 'petNormal';
     closeLine.textContent = `“${pickLine(key)}”`;
     bindImg(closeImg, key === 'petHappy' ? char.assets.closeHappy : key === 'petSoft' ? char.assets.closeSoft : char.assets.closeNormal, char.name);
   }
@@ -599,7 +653,7 @@ function petFeedback(x, y) {
 
 function openPanel(name) {
   panelName = name;
-  $('#panelTitle').textContent = { listen: 'LISTEN', message: 'MESSAGE', todo: 'WITH ME', moment: 'MOMENT' }[name];
+  $('#panelTitle').textContent = { listen: '앨범', message: '메시지', todo: '할 일', moment: '순간' }[name];
   ['listen', 'message', 'todo', 'moment'].forEach(n => $(`#${n}Panel`).classList.toggle('hidden', n !== name));
   panel.classList.remove('hidden');
   if (name === 'listen') renderListen();
@@ -650,9 +704,9 @@ $('#closeBack').addEventListener('click', () => closeScreen.classList.add('hidde
 $('#callBtn').addEventListener('click', () => {
   const dest = char.zones.center ? 'center' : Object.keys(char.zones)[0];
   moveTo(dest);
-  setTimeout(() => say(pickLine('idle')), 2250);
+  setTimeout(() => say(pickLine('idle'), 3300, { force: true }), 2250);
 });
-$('#randomTalkBtn').addEventListener('click', () => say(contextualTalk()));
+$('#randomTalkBtn').addEventListener('click', () => say(contextualTalk(), 3300, { force: true }));
 $$('.rail-btn').forEach(b => b.addEventListener('click', () => openPanel(b.dataset.panel)));
 $('#panelBack').addEventListener('click', () => panel.classList.add('hidden'));
 $('#todoForm').addEventListener('submit', (e) => {
@@ -700,10 +754,10 @@ petZone.addEventListener('pointerdown', (e) => { petZone.setPointerCapture(e.poi
 petZone.addEventListener('pointermove', (e) => {
   if (lastX === null) return;
   const dx = Math.abs(e.clientX - lastX);
-  if (dx > 11) {
+  if (dx > PET_DX) {
     stroke += 1;
     lastX = e.clientX;
-    if (stroke % 2 === 0) petFeedback(e.clientX, e.clientY);
+    if (stroke % PET_STROKES_PER_TICK === 0) petFeedback(e.clientX, e.clientY);
   }
 });
 ['pointerup', 'pointercancel'].forEach((ev) => petZone.addEventListener(ev, () => { lastX = null; stroke = 0; }));

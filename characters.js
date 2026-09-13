@@ -16,11 +16,13 @@ const CHARACTERS = {
     characterTraits: ['과묵함', '싸늘한 반말', '자기혐오', '보호욕', '무뚝뚝한 다정함', '철저한 자기 규칙'],
     behavior: {
       moveInterval: 'slow',
-      movementFrequency: 0.45,
-      idleWeight: 0.45,
-      sitWeight: 0.25,
-      windowWeight: 0.20,
-      sleepWeight: 0.10
+      movementFrequency: 0.22,
+      idleWeight: 0.78,
+      sitWeight: 0.10,
+      windowWeight: 0.07,
+      sleepWeight: 0.05,
+      specialChance: 0.14,
+      randomActionWeight: 0.06
     },
     theme: { primary: '#38483F', secondary: '#281D1C', accent: '#A94A3F', warm: '#C6A36A' },
     roomMood: '정돈된 작은 방. 회색과 짙은 녹색을 기반으로 붉은 포인트 조명이 들어오며, 냉장고와 금속 선반이 놓인 실용적이고 단정한 생활 공간.',
@@ -33,16 +35,20 @@ const CHARACTERS = {
       sit: 'assets/characters/gukgyeom/chibi_sit.png',
       sleep: 'assets/characters/gukgyeom/chibi_sleep.png',
       window: 'assets/characters/gukgyeom/chibi_window.png',
+      special: 'assets/characters/gukgyeom/chibi_special_1.png',
       closeNormal: 'assets/characters/gukgyeom/close_normal.png',
       closeSoft: 'assets/characters/gukgyeom/close_soft.png',
       closeHappy: 'assets/characters/gukgyeom/close_happy.png'
     },
     zones: {
-      center: { left: 50, top: 64, weight: 2.2, pose: 'idle', state: '가만히 서 있는 중' },
-      window: { left: 30, top: 54, weight: 1.4, pose: 'window', state: '창밖을 오래 보는 중' },
-      desk: { left: 54, top: 58, weight: 0.7, pose: 'sit', state: '책상 앞에 앉아 있는 중' },
-      floor: { left: 48, top: 70, weight: 0.8, pose: 'sit', state: '바닥에 내려앉아 쉬는 중' },
-      bed: { left: 22, top: 72, weight: 0.9, pose: 'sleep', state: '잠깐 눈을 감은 중' }
+      center: { left: 46, top: 68, weight: 2.2, pose: 'idle', state: '가만히 서 있는 중' },
+      floorFront: { left: 58, top: 74, weight: 1.8, pose: 'idle', state: '방 앞쪽을 서성이는 중' },
+      floorLeft: { left: 28, top: 70, weight: 1.4, pose: 'idle', state: '선반 쪽을 보는 중' },
+      floorMid: { left: 40, top: 54, weight: 1.2, pose: 'idle', state: '침대 앞을 지나가는 중' },
+      chair: { left: 16, top: 58, weight: 0.8, pose: 'sit', state: '의자에 앉아 있는 중' },
+      window: { left: 50, top: 38, weight: 0.6, pose: 'window', state: '창밖을 오래 보는 중' },
+      bed: { left: 50, top: 46, weight: 0.5, pose: 'sleep', state: '침대에 앉아 쉬는 중' },
+      special: { left: 30, top: 64, weight: 0.5, pose: 'special', state: '새우튀김을 집어 든 중' }
     },
     dialogue: {
       greeting: [
@@ -133,11 +139,14 @@ const CHARACTERS = {
     characterTraits: ['능청', '나른함', '사교적', '반사회적 농담', '존댓말과 반말 혼용', '강단 있음', '명확한 자기 선', '매우 강한 멘탈'],
     behavior: {
       moveInterval: 'medium',
-      movementFrequency: 0.60,
-      idleWeight: 0.25,
-      sitWeight: 0.40,
-      windowWeight: 0.15,
-      deskWeight: 0.20
+      movementFrequency: 0.28,
+      idleWeight: 0.72,
+      sitWeight: 0.12,
+      windowWeight: 0.08,
+      deskWeight: 0.10,
+      sleepWeight: 0.05,
+      specialChance: 0.16,
+      randomActionWeight: 0.07
     },
     theme: { primary: '#59634A', secondary: '#49362C', accent: '#A54E43', warm: '#C18A52' },
     roomMood: '작업실과 개인실이 자연스럽게 섞인 작은 정비공의 방. 올리브·브라운을 기본으로 초록과 붉은 조명이 들어오며, 작업대와 공구, 기계 부품, 카세트 플레이어 등이 놓인 느슨하고 생활감 있는 공간.',
@@ -150,16 +159,20 @@ const CHARACTERS = {
       sit: 'assets/characters/geonmyeong/chibi_sit.png',
       sleep: 'assets/characters/geonmyeong/chibi_sleep.png',
       window: 'assets/characters/geonmyeong/chibi_window.png',
+      special: 'assets/characters/geonmyeong/chibi_special_1.png',
       closeNormal: 'assets/characters/geonmyeong/close_normal.png',
       closeSoft: 'assets/characters/geonmyeong/close_soft.png',
       closeHappy: 'assets/characters/geonmyeong/close_happy.png'
     },
     zones: {
-      desk: { left: 52, top: 60, weight: 1.8, pose: 'sit', state: '작업대에서 부품을 만지는 중' },
-      window: { left: 31, top: 55, weight: 1.0, pose: 'window', state: '창밖을 잠깐 보는 중' },
-      floor: { left: 53, top: 68, weight: 1.6, pose: 'sit', state: '바닥에 주저앉아 쉬는 중' },
-      center: { left: 50, top: 64, weight: 1.0, pose: 'idle', state: '별일 없이 빈둥거리는 중' },
-      bed: { left: 24, top: 72, weight: 0.6, pose: 'sleep', state: '침대 모서리에 앉은 중' }
+      center: { left: 48, top: 64, weight: 2.0, pose: 'idle', state: '별일 없이 빈둥거리는 중' },
+      floorFront: { left: 62, top: 74, weight: 1.8, pose: 'idle', state: '전선 사이를 지나가는 중' },
+      floorLeft: { left: 28, top: 68, weight: 1.3, pose: 'idle', state: '침대 앞을 서성이는 중' },
+      floorMid: { left: 40, top: 54, weight: 1.2, pose: 'idle', state: '작업대 앞을 오가는 중' },
+      desk: { left: 44, top: 48, weight: 0.7, pose: 'sit', state: '작업대에서 부품을 만지는 중' },
+      window: { left: 50, top: 40, weight: 0.5, pose: 'window', state: '창밖을 잠깐 보는 중' },
+      bed: { left: 16, top: 54, weight: 0.4, pose: 'sleep', state: '침대에 걸터앉은 중' },
+      special: { left: 58, top: 70, weight: 0.5, pose: 'special', state: '바닥에 쪼그려 공구를 만지는 중' }
     },
     dialogue: {
       greeting: [
@@ -251,11 +264,13 @@ const CHARACTERS = {
     defaultPlayerTitle: '선생님',
     behavior: {
       moveInterval: 'slow',
-      movementFrequency: 0.35,
-      idleWeight: 0.20,
-      sitWeight: 0.50,
-      windowWeight: 0.15,
-      sleepWeight: 0.15
+      movementFrequency: 0.18,
+      idleWeight: 0.70,
+      sitWeight: 0.16,
+      windowWeight: 0.07,
+      sleepWeight: 0.07,
+      specialChance: 0.13,
+      randomActionWeight: 0.06
     },
     theme: { primary: '#B9CCC4', secondary: '#D8D8D2', accent: '#A96D70', dark: '#34413F' },
     roomMood: '작은 진료 벙커에 딸린 포근한 개인 공간. 흰색·민트·회색을 중심으로 희미한 붉은 조명이 섞이며, 낮은 침대와 의료용 수납장이 놓여 있다.',
@@ -268,16 +283,19 @@ const CHARACTERS = {
       sit: 'assets/characters/ryeoseon/chibi_sit.png',
       sleep: 'assets/characters/ryeoseon/chibi_sleep.png',
       window: 'assets/characters/ryeoseon/chibi_window.png',
+      special: 'assets/characters/ryeoseon/chibi_special_1.png',
       closeNormal: 'assets/characters/ryeoseon/close_normal.png',
       closeSoft: 'assets/characters/ryeoseon/close_soft.png',
       closeHappy: 'assets/characters/ryeoseon/close_happy.png'
     },
     zones: {
-      floor: { left: 48, top: 70, weight: 2.2, pose: 'sit', state: '바닥에 앉아 있는 중' },
-      center: { left: 50, top: 66, weight: 1.2, pose: 'sit', state: '자리를 잘 안 뜨는 중' },
-      desk: { left: 58, top: 58, weight: 0.8, pose: 'sit', state: '책상 모서리에 기대 있는 중' },
-      window: { left: 28, top: 56, weight: 0.9, pose: 'window', state: '창가에 앉아 있는 중' },
-      bed: { left: 22, top: 72, weight: 1.3, pose: 'sleep', state: '이불 위에 엎드린 중' }
+      center: { left: 22, top: 72, weight: 2.0, pose: 'idle', state: '자리를 잘 안 뜨는 중' },
+      floorFront: { left: 72, top: 74, weight: 1.6, pose: 'idle', state: '침대 옆을 서성이는 중' },
+      floorMid: { left: 18, top: 60, weight: 1.3, pose: 'idle', state: '선반 앞에 서 있는 중' },
+      stool: { left: 22, top: 52, weight: 0.8, pose: 'sit', state: '낮은 의자에 앉아 있는 중' },
+      window: { left: 52, top: 36, weight: 0.5, pose: 'window', state: '창가에 기대 있는 중' },
+      bed: { left: 50, top: 60, weight: 0.6, pose: 'sleep', state: '이불 위에 엎드린 중' },
+      special: { left: 28, top: 56, weight: 0.5, pose: 'special', state: '약병을 확인하는 중' }
     },
     dialogue: {
       greeting: [
@@ -369,11 +387,13 @@ const CHARACTERS = {
     defaultPlayerTitle: '아가씨',
     behavior: {
       moveInterval: 'medium',
-      movementFrequency: 0.40,
-      idleWeight: 0.30,
-      sitWeight: 0.45,
-      windowWeight: 0.15,
-      sleepWeight: 0.10
+      movementFrequency: 0.22,
+      idleWeight: 0.68,
+      sitWeight: 0.16,
+      windowWeight: 0.08,
+      sleepWeight: 0.05,
+      specialChance: 0.14,
+      randomActionWeight: 0.06
     },
     theme: { primary: '#243B34', secondary: '#481F2A', accent: '#C9A75D', cream: '#D8C9AE' },
     roomMood: '도박장과 LP바의 분위기가 섞인 세련된 개인실. 딥그린·와인·금색 중심으로 작은 소파와 LP 플레이어, 카드와 액세서리가 놓여 있다.',
@@ -386,16 +406,20 @@ const CHARACTERS = {
       sit: 'assets/characters/heedong/chibi_sit.png',
       sleep: 'assets/characters/heedong/chibi_sleep.png',
       window: 'assets/characters/heedong/chibi_window.png',
+      special: 'assets/characters/heedong/chibi_special_1.png',
       closeNormal: 'assets/characters/heedong/close_normal.png',
       closeSoft: 'assets/characters/heedong/close_soft.png',
       closeHappy: 'assets/characters/heedong/close_happy.png'
     },
     zones: {
-      sofa: { left: 36, top: 66, weight: 2.4, pose: 'sit', state: '소파에 기대 앉은 중' },
-      desk: { left: 58, top: 58, weight: 1.1, pose: 'sit', state: '테이블에 앉아 있는 중' },
-      center: { left: 50, top: 64, weight: 0.8, pose: 'idle', state: '천천히 서성이는 중' },
-      window: { left: 72, top: 54, weight: 0.9, pose: 'window', state: '창가 소파에 앉은 중' },
-      bed: { left: 20, top: 72, weight: 0.7, pose: 'sleep', state: '소파에 누운 중' }
+      center: { left: 48, top: 70, weight: 2.0, pose: 'idle', state: '천천히 서성이는 중' },
+      floorFront: { left: 60, top: 74, weight: 1.8, pose: 'idle', state: '방 한가운데를 걷는 중' },
+      floorMid: { left: 36, top: 58, weight: 1.3, pose: 'idle', state: '소파 앞을 지나가는 중' },
+      lamp: { left: 68, top: 62, weight: 1.1, pose: 'idle', state: '스탠드 옆에 서 있는 중' },
+      sofa: { left: 20, top: 48, weight: 0.8, pose: 'sit', state: '소파에 기대 앉은 중' },
+      window: { left: 52, top: 42, weight: 0.5, pose: 'window', state: 'LP 쪽을 바라보는 중' },
+      bed: { left: 22, top: 52, weight: 0.4, pose: 'sleep', state: '소파에 누운 중' },
+      special: { left: 44, top: 66, weight: 0.5, pose: 'special', state: '카드를 펼쳐 보는 중' }
     },
     dialogue: {
       greeting: [
@@ -486,11 +510,13 @@ const CHARACTERS = {
     characterTraits: ['천하태평', '시금털털', '나른한 성숙함', '능글맞음', '장난기', '친근한 반말', '미련 없는 태도', '위기 시 즉각적인 판단력'],
     behavior: {
       moveInterval: 'slow',
-      movementFrequency: 0.25,
-      idleWeight: 0.20,
-      sitWeight: 0.45,
-      windowWeight: 0.10,
-      sleepWeight: 0.25
+      movementFrequency: 0.16,
+      idleWeight: 0.70,
+      sitWeight: 0.12,
+      windowWeight: 0.06,
+      sleepWeight: 0.08,
+      specialChance: 0.12,
+      randomActionWeight: 0.05
     },
     theme: { primary: '#45513F', secondary: '#2D3441', accent: '#9E5148', bronze: '#A77C55' },
     roomMood: '편안하게 늘어진 경찰의 개인실. 베이지·네이비·올리브 중심에 붉은 도시빛이 들어오며, 정리되지 않은 침대와 제복, 술병과 라디오가 놓여 있다.',
@@ -503,16 +529,19 @@ const CHARACTERS = {
       sit: 'assets/characters/haerim/chibi_sit.png',
       sleep: 'assets/characters/haerim/chibi_sleep.png',
       window: 'assets/characters/haerim/chibi_window.png',
+      special: 'assets/characters/haerim/chibi_special_1.png',
       closeNormal: 'assets/characters/haerim/close_normal.png',
       closeSoft: 'assets/characters/haerim/close_soft.png',
       closeHappy: 'assets/characters/haerim/close_happy.png'
     },
     zones: {
-      bed: { left: 28, top: 70, weight: 2.8, pose: 'sleep', state: '이불 속에서 쉬는 중' },
-      floor: { left: 50, top: 68, weight: 1.8, pose: 'sit', state: '침대 옆에 앉아 있는 중' },
-      center: { left: 48, top: 64, weight: 0.5, pose: 'idle', state: '겨우 일어난 중' },
-      window: { left: 70, top: 56, weight: 0.6, pose: 'window', state: '커튼 사이로 밖을 보는 중' },
-      desk: { left: 60, top: 58, weight: 0.5, pose: 'sit', state: '책상에 팔베개한 중' }
+      center: { left: 36, top: 72, weight: 2.0, pose: 'idle', state: '겨우 일어난 중' },
+      floorFront: { left: 50, top: 74, weight: 1.7, pose: 'idle', state: '마루를 천천히 걷는 중' },
+      floorLeft: { left: 22, top: 68, weight: 1.2, pose: 'idle', state: '가방 옆을 보는 중' },
+      chair: { left: 62, top: 58, weight: 0.7, pose: 'sit', state: '의자에 늘어진 중' },
+      window: { left: 52, top: 38, weight: 0.5, pose: 'window', state: '창밖 불빛을 보는 중' },
+      bed: { left: 58, top: 50, weight: 0.6, pose: 'sleep', state: '이불 속에서 쉬는 중' },
+      special: { left: 30, top: 64, weight: 0.5, pose: 'special', state: '캔을 집어 든 중' }
     },
     dialogue: {
       greeting: [
@@ -603,12 +632,13 @@ const CHARACTERS = {
     characterTraits: ['광기와 순종의 급격한 전환', '폭력성 급류', '경박함', '괴이한 존댓말', '강박적 반복어', '예측불가', '근무태만', '연애 시 어리광'],
     behavior: {
       moveInterval: 'fast',
-      movementFrequency: 0.85,
-      idleWeight: 0.10,
-      sitWeight: 0.20,
-      windowWeight: 0.20,
-      sleepWeight: 0.05,
-      randomActionWeight: 0.45
+      movementFrequency: 0.38,
+      idleWeight: 0.62,
+      sitWeight: 0.12,
+      windowWeight: 0.10,
+      sleepWeight: 0.04,
+      specialChance: 0.20,
+      randomActionWeight: 0.10
     },
     theme: { primary: '#197F7A', secondary: '#315EA8', accent: '#D84845', lime: '#A4D65E' },
     roomMood: '컬러풀하고 기묘한 물건이 가득한 귀여운 방. 청록·코발트·빨강·라임을 포인트로 사용하며, 청소도구와 이상한 수집품이 장난감처럼 뒤섞여 있다.',
@@ -635,16 +665,19 @@ const CHARACTERS = {
       sit: 'assets/characters/cheongso/chibi_sit.png',
       sleep: 'assets/characters/cheongso/chibi_sleep.png',
       window: 'assets/characters/cheongso/chibi_window.png',
+      special: 'assets/characters/cheongso/chibi_special_1.png',
       closeNormal: 'assets/characters/cheongso/close_normal.png',
       closeSoft: 'assets/characters/cheongso/close_soft.png',
       closeHappy: 'assets/characters/cheongso/close_happy.png'
     },
     zones: {
-      center: { left: 50, top: 64, weight: 1.4, pose: 'idle', state: '또 뭔가 만지는 중' },
-      desk: { left: 56, top: 58, weight: 1.2, pose: 'sit', state: '작업대에 붙었다가 일어나는 중' },
-      window: { left: 30, top: 54, weight: 1.1, pose: 'window', state: '창가까지 다녀오는 중' },
-      floor: { left: 46, top: 70, weight: 0.8, pose: 'sit', state: '바닥에 앉았다가 일어나는 중' },
-      bed: { left: 22, top: 72, weight: 0.5, pose: 'sleep', state: '침대에 잠깐 누운 중' }
+      center: { left: 24, top: 72, weight: 2.0, pose: 'idle', state: '또 뭔가 만지는 중' },
+      floorFront: { left: 50, top: 74, weight: 1.8, pose: 'idle', state: '바닥을 헤집고 다니는 중' },
+      floorRight: { left: 70, top: 70, weight: 1.3, pose: 'idle', state: '쓰레기통 쪽을 보는 중' },
+      window: { left: 52, top: 36, weight: 0.6, pose: 'window', state: '검은 창을 들여다보는 중' },
+      sitBed: { left: 38, top: 56, weight: 0.6, pose: 'sit', state: '침대 모서리에 앉은 중' },
+      bed: { left: 48, top: 54, weight: 0.4, pose: 'sleep', state: '침대 더미에 누운 중' },
+      special: { left: 68, top: 58, weight: 0.7, pose: 'special', state: '빗자루를 집어 든 중' }
     },
     dialogue: {
       greeting: [
