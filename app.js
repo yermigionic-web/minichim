@@ -65,11 +65,14 @@ let lastTalkAt = 0;
 let lastWalkSrc = '';
 let closeSessionPets = 0;
 let lastPetLineAt = 0;
+let closeStage = 0;
+let petIdleTimer = null;
 let pendingId = currentId;
 let onboardMode = 'first';
 const TALK_MIN = 8000;
 const TALK_MAX = 20000;
-const PET_LINE_GAP = 600;
+const PET_LINE_GAP = 2000;
+const PET_REVERT_MS = 1500;
 const PET_DX = 44;
 const PET_STROKES_PER_TICK = 6;
 
@@ -175,7 +178,7 @@ function zonePickWeight(name, z) {
   if (name === 'desk' && b.deskWeight != null) return b.deskWeight;
   if ((name === 'bed' || z.pose === 'sleep') && b.sleepWeight != null) return b.sleepWeight;
   if (z.pose === 'sit' && b.sitWeight != null) return b.sitWeight;
-  if (z.pose === 'idle' && b.idleWeight != null) return b.idleWeight;
+  if (z.pose === 'idle') return z.weight || b.idleWeight || 1;
   return z.weight || 1;
 }
 
@@ -270,9 +273,11 @@ function currentCharPos() {
 }
 
 function walkSrcForDelta(dx) {
-  if (dx < -0.8) return char.assets.walk1;
-  if (dx > 0.8) return char.assets.walk2;
-  return lastWalkSrc || char.assets.walk2;
+  const leftSrc = (char.walkLeft === 2) ? char.assets.walk2 : char.assets.walk1;
+  const rightSrc = (char.walkLeft === 2) ? char.assets.walk1 : char.assets.walk2;
+  if (dx < -0.8) return leftSrc;
+  if (dx > 0.8) return rightSrc;
+  return lastWalkSrc || rightSrc;
 }
 
 function startWalk(dx) {
@@ -352,13 +357,12 @@ function renderMessages() {
 function loadTodos() { return store.get('wy_todos', []); }
 function saveTodos(v) { store.set('wy_todos', v); renderTodos(); }
 function seedTodos() {
-  if (!store.get('wy_todos_seeded', false)) {
-    store.set('wy_todos', [
-      { text: '물 마시기', done: false },
-      { text: '작업 1시간', done: true },
-      { text: '원고 500자', done: false },
-      { text: '방 정리하기', done: true }
-    ]);
+  const next = [{ text: '목표를 추가한 뒤, 체크해서 지우기!', done: false }];
+  const oldSeed = ['물 마시기', '작업 1시간', '원고 500자', '방 정리하기'];
+  const current = loadTodos();
+  const isOldExample = current.length === 4 && current.every((t, i) => t.text === oldSeed[i]);
+  if (!store.get('wy_todos_seeded', false) || isOldExample) {
+    store.set('wy_todos', next);
     store.set('wy_todos_seeded', true);
   }
 }
@@ -620,14 +624,35 @@ function enterRoom({ greetDelay = 700 } = {}) {
   setTimeout(() => say(away ? pickLine('returning') : pickLine('greeting'), 3300, { force: true }), greetDelay);
 }
 
+function closeSprite(stage) {
+  return [char.assets.closeNormal, char.assets.closeSoft, char.assets.closeHappy][stage] || char.assets.closeNormal;
+}
+function applyCloseStage(stage, { speak = false } = {}) {
+  closeStage = Math.max(0, Math.min(2, stage));
+  bindImg(closeImg, closeSprite(closeStage), char.name);
+  if (speak) {
+    const key = ['petNormal', 'petSoft', 'petHappy'][closeStage];
+    closeLine.textContent = `“${pickLine(key)}”`;
+  }
+}
+function holdPetRevert() { clearTimeout(petIdleTimer); }
+function armPetRevert() {
+  clearTimeout(petIdleTimer);
+  petIdleTimer = setTimeout(() => {
+    if (closeStage > 0) {
+      applyCloseStage(closeStage - 1);
+      armPetRevert();
+    }
+  }, PET_REVERT_MS);
+}
 function openClose() {
   closeSessionPets = 0;
   lastPetLineAt = 0;
   lastX = null;
   stroke = 0;
+  holdPetRevert();
   closeScreen.classList.remove('hidden');
-  bindImg(closeImg, char.assets.closeNormal, char.name);
-  closeLine.textContent = `“${pickLine('petNormal')}”`;
+  applyCloseStage(0, { speak: true });
 }
 function petFeedback(x, y) {
   petCount += 1;
@@ -636,9 +661,8 @@ function petFeedback(x, y) {
   const now = Date.now();
   if (now - lastPetLineAt >= PET_LINE_GAP) {
     lastPetLineAt = now;
-    const key = closeSessionPets >= 22 ? 'petHappy' : closeSessionPets >= 10 ? 'petSoft' : 'petNormal';
-    closeLine.textContent = `“${pickLine(key)}”`;
-    bindImg(closeImg, key === 'petHappy' ? char.assets.closeHappy : key === 'petSoft' ? char.assets.closeSoft : char.assets.closeNormal, char.name);
+    const next = closeSessionPets >= 8 ? 2 : closeSessionPets >= 3 ? 1 : 0;
+    applyCloseStage(next, { speak: true });
   }
   const h = document.createElement('span');
   h.className = 'heart';
@@ -700,7 +724,10 @@ $('#resetDataBtn').addEventListener('click', () => {
   }
 });
 character.addEventListener('click', openClose);
-$('#closeBack').addEventListener('click', () => closeScreen.classList.add('hidden'));
+$('#closeBack').addEventListener('click', () => {
+  holdPetRevert();
+  closeScreen.classList.add('hidden');
+});
 $('#callBtn').addEventListener('click', () => {
   const dest = char.zones.center ? 'center' : Object.keys(char.zones)[0];
   moveTo(dest);
@@ -750,9 +777,15 @@ audio.addEventListener('ended', () => setTrack(currentTrack + 1));
 
 let lastX = null, stroke = 0;
 const petZone = $('#petZone');
-petZone.addEventListener('pointerdown', (e) => { petZone.setPointerCapture(e.pointerId); lastX = e.clientX; stroke = 0; });
+petZone.addEventListener('pointerdown', (e) => {
+  petZone.setPointerCapture(e.pointerId);
+  lastX = e.clientX;
+  stroke = 0;
+  holdPetRevert();
+});
 petZone.addEventListener('pointermove', (e) => {
   if (lastX === null) return;
+  holdPetRevert();
   const dx = Math.abs(e.clientX - lastX);
   if (dx > PET_DX) {
     stroke += 1;
@@ -760,7 +793,11 @@ petZone.addEventListener('pointermove', (e) => {
     if (stroke % PET_STROKES_PER_TICK === 0) petFeedback(e.clientX, e.clientY);
   }
 });
-['pointerup', 'pointercancel'].forEach((ev) => petZone.addEventListener(ev, () => { lastX = null; stroke = 0; }));
+['pointerup', 'pointercancel'].forEach((ev) => petZone.addEventListener(ev, () => {
+  lastX = null;
+  stroke = 0;
+  armPetRevert();
+}));
 
 if (window.visualViewport) {
   const syncKeyboard = () => {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#F7EFE2" />
+  <meta name="theme-color" content="#FFFFFF" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>My Chenzheng Home</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,8 +23,16 @@
   <div id="app" class="phone-shell">
     <section id="onboarding" class="screen onboard-screen" aria-label="처음 인사">
       <div class="onboard-paper" aria-hidden="true"></div>
-      <div class="onboard-grain" aria-hidden="true"></div>
-      <div class="onboard-lamp" aria-hidden="true"></div>
+      <div class="onboard-stickers" aria-hidden="true">
+        <svg class="sticker s-star" viewBox="0 0 24 24"><path fill="#E35B4D" d="M12 2.4l2.3 6.8h7.1l-5.7 4.2 2.2 6.8L12 16.1 6.1 20.2l2.2-6.8L2.6 9.2h7.1z"/></svg>
+        <svg class="sticker s-house" viewBox="0 0 24 24"><path fill="none" stroke="#1F3B2E" stroke-width="1.7" d="M4 11.2 12 4.6 20 11.2V20H4z"/><path fill="none" stroke="#1F3B2E" stroke-width="1.7" d="M10 20v-6h4v6"/></svg>
+        <svg class="sticker s-plug" viewBox="0 0 24 24"><path fill="none" stroke="#1F3B2E" stroke-width="1.7" stroke-linecap="round" d="M8 3.5v6M16 3.5v6M6.5 9.5h11v4.2a5.5 5.5 0 0 1-4.2 5.3V22"/></svg>
+        <svg class="sticker s-wrench" viewBox="0 0 24 24"><path fill="none" stroke="#A94433" stroke-width="1.7" stroke-linecap="round" d="M14.8 4.2a4.2 4.2 0 0 0-5.4 5.1L4 14.7l3.3 3.3 5.4-5.4a4.2 4.2 0 0 0 5.1-5.4l-2.6 2.6-2.2-2.2z"/></svg>
+        <svg class="sticker s-band" viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="6" rx="2" fill="none" stroke="#8B95A1" stroke-width="1.6"/><path stroke="#8B95A1" stroke-width="1.6" d="M9 9v6M15 9v6"/></svg>
+        <svg class="sticker s-club" viewBox="0 0 24 24"><path fill="#243B34" d="M12 3.2a4 4 0 0 0-1.6 7.7A4.1 4.1 0 1 0 7 17.6c1.4 0 2.5-.6 3.2-1.5L9.4 21h5.2l-.8-4.9c.7.9 1.8 1.5 3.2 1.5a4.1 4.1 0 1 0-3.4-6.7A4 4 0 0 0 12 3.2z"/></svg>
+        <svg class="sticker s-stamp" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="none" stroke="#9E5148" stroke-width="1.6"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#9E5148" stroke-width="1.6"/></svg>
+        <svg class="sticker s-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="#6E9F8F"/></svg>
+      </div>
 
       <div id="splashStep" class="onboard-step splash-step">
         <p class="onboard-brand">沈錚</p>
@@ -96,7 +104,11 @@
 
         <header class="room-topbar">
           <div class="player-chip"><span class="person-icon">♙</span><span id="playerName">YOU</span></div>
-          <div class="date-time"><span id="dateLabel"></span><strong id="clock">21:37</strong></div>
+          <div class="date-time">
+            <span id="dateLabel"></span>
+            <strong id="clock">21:37</strong>
+            <p id="statusText" class="status-index">별일 없이 빈둥거리는 중</p>
+          </div>
         </header>
 
         <div class="name-plate" id="namePlate">
@@ -127,14 +139,13 @@
           <button id="randomTalkBtn" class="mini-action" aria-label="말 걸기">···</button>
           <button id="switchCharBtn" class="mini-action switch-char" aria-label="캐릭터 변경">⇄</button>
         </div>
-        <div id="statusText" class="status-text">별일 없이 빈둥거리는 중</div>
       </section>
     </main>
 
     <section id="closeScreen" class="screen close-screen hidden" aria-label="가까이 보기">
       <div class="close-gradient"></div>
       <button id="closeBack" class="ios-close" aria-label="돌아가기">×</button>
-      <div class="close-bubble"><p id="closeLine">“……왜요. 싫진 않은데.”</p></div>
+      <div class="close-line-box"><p id="closeLine">“……왜요. 싫진 않은데.”</p></div>
       <div class="close-art-wrap">
         <img id="closeImg" src="assets/characters/geonmyeong/close_normal.png" alt="" />
         <div id="petZone" class="pet-zone" aria-label="머리를 쓰다듬는 영역"></div>

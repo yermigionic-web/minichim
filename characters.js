@@ -3,6 +3,7 @@ const CHAR_ORDER = ['gukgyeom', 'geonmyeong', 'ryeoseon', 'heedong', 'haerim', '
 const CHARACTERS = {
   gukgyeom: {
     id: 'gukgyeom',
+    walkLeft: 1,
     name: '이국겸',
     originalName: '黎國謙',
     romanizedName: 'Lai Gwok-im',
@@ -41,14 +42,16 @@ const CHARACTERS = {
       closeHappy: 'assets/characters/gukgyeom/close_happy.png'
     },
     zones: {
-      center: { left: 46, top: 68, weight: 2.2, pose: 'idle', state: '가만히 서 있는 중' },
-      floorFront: { left: 58, top: 74, weight: 1.8, pose: 'idle', state: '방 앞쪽을 서성이는 중' },
-      floorLeft: { left: 28, top: 70, weight: 1.4, pose: 'idle', state: '선반 쪽을 보는 중' },
-      floorMid: { left: 40, top: 54, weight: 1.2, pose: 'idle', state: '침대 앞을 지나가는 중' },
+      center: { left: 44, top: 70, weight: 2.0, pose: 'idle', state: '가만히 서 있는 중' },
+      floorFront: { left: 58, top: 86, weight: 1.8, pose: 'idle', state: '방 앞쪽을 서성이는 중' },
+      floorLeft: { left: 10, top: 78, weight: 1.6, pose: 'idle', state: '선반 쪽을 보는 중' },
+      floorRight: { left: 78, top: 74, weight: 1.6, pose: 'idle', state: '문 쪽을 보는 중' },
+      floorBack: { left: 28, top: 48, weight: 1.2, pose: 'idle', state: '침대 앞을 지나가는 중' },
+      floorFar: { left: 70, top: 52, weight: 1.1, pose: 'idle', state: '냉장고 쪽을 보는 중' },
       chair: { left: 16, top: 58, weight: 0.8, pose: 'sit', state: '의자에 앉아 있는 중' },
-      window: { left: 50, top: 38, weight: 0.6, pose: 'window', state: '창밖을 오래 보는 중' },
+      window: { left: 50, top: 36, weight: 0.6, pose: 'window', state: '창밖을 오래 보는 중' },
       bed: { left: 50, top: 46, weight: 0.5, pose: 'sleep', state: '침대에 앉아 쉬는 중' },
-      special: { left: 30, top: 64, weight: 0.5, pose: 'special', state: '새우튀김을 집어 든 중' }
+      special: { left: 28, top: 62, weight: 0.5, pose: 'special', state: '새우튀김을 집어 든 중' }
     },
     dialogue: {
       greeting: [
@@ -126,6 +129,7 @@ const CHARACTERS = {
 
   geonmyeong: {
     id: 'geonmyeong',
+    walkLeft: 1,
     name: '구건명',
     originalName: '邱建明',
     romanizedName: 'Yau Kin Ming',
@@ -165,14 +169,16 @@ const CHARACTERS = {
       closeHappy: 'assets/characters/geonmyeong/close_happy.png'
     },
     zones: {
-      center: { left: 48, top: 64, weight: 2.0, pose: 'idle', state: '별일 없이 빈둥거리는 중' },
-      floorFront: { left: 62, top: 74, weight: 1.8, pose: 'idle', state: '전선 사이를 지나가는 중' },
-      floorLeft: { left: 28, top: 68, weight: 1.3, pose: 'idle', state: '침대 앞을 서성이는 중' },
-      floorMid: { left: 40, top: 54, weight: 1.2, pose: 'idle', state: '작업대 앞을 오가는 중' },
-      desk: { left: 44, top: 48, weight: 0.7, pose: 'sit', state: '작업대에서 부품을 만지는 중' },
-      window: { left: 50, top: 40, weight: 0.5, pose: 'window', state: '창밖을 잠깐 보는 중' },
-      bed: { left: 16, top: 54, weight: 0.4, pose: 'sleep', state: '침대에 걸터앉은 중' },
-      special: { left: 58, top: 70, weight: 0.5, pose: 'special', state: '바닥에 쪼그려 공구를 만지는 중' }
+      center: { left: 40, top: 70, weight: 2.0, pose: 'idle', state: '별일 없이 빈둥거리는 중' },
+      floorFront: { left: 56, top: 86, weight: 1.8, pose: 'idle', state: '전선 사이를 지나가는 중' },
+      floorLeft: { left: 10, top: 76, weight: 1.5, pose: 'idle', state: '침대 앞을 서성이는 중' },
+      floorRight: { left: 78, top: 68, weight: 1.5, pose: 'idle', state: '선반 옆을 보는 중' },
+      floorMid: { left: 28, top: 54, weight: 1.2, pose: 'idle', state: '작업대 앞을 오가는 중' },
+      floorFar: { left: 68, top: 50, weight: 1.1, pose: 'idle', state: '공구함 쪽을 보는 중' },
+      desk: { left: 48, top: 50, weight: 0.7, pose: 'sit', state: '작업대에서 부품을 만지는 중' },
+      window: { left: 50, top: 38, weight: 0.5, pose: 'window', state: '창밖을 잠깐 보는 중' },
+      bed: { left: 16, top: 52, weight: 0.4, pose: 'sleep', state: '침대에 걸터앉은 중' },
+      special: { left: 58, top: 72, weight: 0.5, pose: 'special', state: '바닥에 쪼그려 공구를 만지는 중' }
     },
     dialogue: {
       greeting: [
@@ -250,6 +256,7 @@ const CHARACTERS = {
 
   ryeoseon: {
     id: 'ryeoseon',
+    walkLeft: 2,
     name: '장려선',
     originalName: '張麗善',
     romanizedName: 'Cheung Lai Sin',
@@ -289,9 +296,11 @@ const CHARACTERS = {
       closeHappy: 'assets/characters/ryeoseon/close_happy.png'
     },
     zones: {
-      center: { left: 22, top: 72, weight: 2.0, pose: 'idle', state: '자리를 잘 안 뜨는 중' },
-      floorFront: { left: 72, top: 74, weight: 1.6, pose: 'idle', state: '침대 옆을 서성이는 중' },
-      floorMid: { left: 18, top: 60, weight: 1.3, pose: 'idle', state: '선반 앞에 서 있는 중' },
+      center: { left: 16, top: 78, weight: 2.2, pose: 'idle', state: '자리를 잘 안 뜨는 중' },
+      floorFront: { left: 72, top: 86, weight: 1.4, pose: 'idle', state: '침대 옆을 서성이는 중' },
+      floorMid: { left: 12, top: 58, weight: 1.3, pose: 'idle', state: '선반 앞에 서 있는 중' },
+      floorRight: { left: 78, top: 70, weight: 1.2, pose: 'idle', state: '커튼 쪽을 보는 중' },
+      floorFar: { left: 48, top: 82, weight: 1.1, pose: 'idle', state: '천천히 다가오는 중' },
       stool: { left: 22, top: 52, weight: 0.8, pose: 'sit', state: '낮은 의자에 앉아 있는 중' },
       window: { left: 52, top: 36, weight: 0.5, pose: 'window', state: '창가에 기대 있는 중' },
       bed: { left: 50, top: 60, weight: 0.6, pose: 'sleep', state: '이불 위에 엎드린 중' },
@@ -373,6 +382,7 @@ const CHARACTERS = {
 
   heedong: {
     id: 'heedong',
+    walkLeft: 1,
     name: '임희동',
     originalName: '林希彤',
     romanizedName: 'Lam Hei Tung',
@@ -412,10 +422,12 @@ const CHARACTERS = {
       closeHappy: 'assets/characters/heedong/close_happy.png'
     },
     zones: {
-      center: { left: 48, top: 70, weight: 2.0, pose: 'idle', state: '천천히 서성이는 중' },
-      floorFront: { left: 60, top: 74, weight: 1.8, pose: 'idle', state: '방 한가운데를 걷는 중' },
-      floorMid: { left: 36, top: 58, weight: 1.3, pose: 'idle', state: '소파 앞을 지나가는 중' },
-      lamp: { left: 68, top: 62, weight: 1.1, pose: 'idle', state: '스탠드 옆에 서 있는 중' },
+      center: { left: 42, top: 74, weight: 2.0, pose: 'idle', state: '천천히 서성이는 중' },
+      floorFront: { left: 54, top: 86, weight: 1.8, pose: 'idle', state: '방 한가운데를 걷는 중' },
+      floorLeft: { left: 10, top: 68, weight: 1.4, pose: 'idle', state: '소파 앞을 지나가는 중' },
+      floorRight: { left: 78, top: 76, weight: 1.4, pose: 'idle', state: '스탠드 옆을 걷는 중' },
+      floorBack: { left: 36, top: 50, weight: 1.1, pose: 'idle', state: '콘솔 앞을 보는 중' },
+      floorFar: { left: 70, top: 54, weight: 1.1, pose: 'idle', state: 'LP 선반 쪽을 보는 중' },
       sofa: { left: 20, top: 48, weight: 0.8, pose: 'sit', state: '소파에 기대 앉은 중' },
       window: { left: 52, top: 42, weight: 0.5, pose: 'window', state: 'LP 쪽을 바라보는 중' },
       bed: { left: 22, top: 52, weight: 0.4, pose: 'sleep', state: '소파에 누운 중' },
@@ -497,6 +509,7 @@ const CHARACTERS = {
 
   haerim: {
     id: 'haerim',
+    walkLeft: 1,
     name: '장해림',
     originalName: '张海霖',
     romanizedName: 'Cheung Hoi Lam',
@@ -535,9 +548,11 @@ const CHARACTERS = {
       closeHappy: 'assets/characters/haerim/close_happy.png'
     },
     zones: {
-      center: { left: 36, top: 72, weight: 2.0, pose: 'idle', state: '겨우 일어난 중' },
-      floorFront: { left: 50, top: 74, weight: 1.7, pose: 'idle', state: '마루를 천천히 걷는 중' },
-      floorLeft: { left: 22, top: 68, weight: 1.2, pose: 'idle', state: '가방 옆을 보는 중' },
+      center: { left: 28, top: 76, weight: 2.0, pose: 'idle', state: '겨우 일어난 중' },
+      floorFront: { left: 50, top: 86, weight: 1.7, pose: 'idle', state: '마루를 천천히 걷는 중' },
+      floorLeft: { left: 10, top: 72, weight: 1.3, pose: 'idle', state: '가방 옆을 보는 중' },
+      floorRight: { left: 78, top: 78, weight: 1.3, pose: 'idle', state: '슬리퍼 쪽을 보는 중' },
+      floorFar: { left: 66, top: 56, weight: 1.0, pose: 'idle', state: '책상 쪽을 보는 중' },
       chair: { left: 62, top: 58, weight: 0.7, pose: 'sit', state: '의자에 늘어진 중' },
       window: { left: 52, top: 38, weight: 0.5, pose: 'window', state: '창밖 불빛을 보는 중' },
       bed: { left: 58, top: 50, weight: 0.6, pose: 'sleep', state: '이불 속에서 쉬는 중' },
@@ -619,6 +634,7 @@ const CHARACTERS = {
 
   cheongso: {
     id: 'cheongso',
+    walkLeft: 2,
     name: '청소',
     originalName: '清巢',
     romanizedName: 'Ching Chau',
@@ -671,9 +687,12 @@ const CHARACTERS = {
       closeHappy: 'assets/characters/cheongso/close_happy.png'
     },
     zones: {
-      center: { left: 24, top: 72, weight: 2.0, pose: 'idle', state: '또 뭔가 만지는 중' },
-      floorFront: { left: 50, top: 74, weight: 1.8, pose: 'idle', state: '바닥을 헤집고 다니는 중' },
-      floorRight: { left: 70, top: 70, weight: 1.3, pose: 'idle', state: '쓰레기통 쪽을 보는 중' },
+      center: { left: 18, top: 76, weight: 1.6, pose: 'idle', state: '또 뭔가 만지는 중' },
+      floorFront: { left: 46, top: 86, weight: 1.8, pose: 'idle', state: '바닥을 헤집고 다니는 중' },
+      floorLeft: { left: 9, top: 66, weight: 1.5, pose: 'idle', state: '의자 쪽을 보는 중' },
+      floorRight: { left: 78, top: 78, weight: 1.6, pose: 'idle', state: '쓰레기통 쪽을 보는 중' },
+      floorMid: { left: 34, top: 56, weight: 1.3, pose: 'idle', state: '침대 앞을 오가는 중' },
+      floorFar: { left: 70, top: 52, weight: 1.3, pose: 'idle', state: '선반을 들추는 중' },
       window: { left: 52, top: 36, weight: 0.6, pose: 'window', state: '검은 창을 들여다보는 중' },
       sitBed: { left: 38, top: 56, weight: 0.6, pose: 'sit', state: '침대 모서리에 앉은 중' },
       bed: { left: 48, top: 54, weight: 0.4, pose: 'sleep', state: '침대 더미에 누운 중' },
