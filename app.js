@@ -71,6 +71,7 @@ let pettingMs = 0;
 let petClockAt = 0;
 let isPetting = false;
 let petRaf = 0;
+let lastStageAt = 0;
 let pendingId = currentId;
 let onboardMode = 'first';
 const TALK_MIN = 8000;
@@ -92,20 +93,29 @@ function inboxElapsedOverride() {
 function ensureInboxClock() {
   if (store.get(ck('inbox_v'), 0) < 2) {
     store.set(ck('inbox_v'), 2);
-    localStorage.removeItem(ck('messages'));
     localStorage.removeItem(ck('album'));
-    store.set(ck('message_seen_count'), 0);
-    store.set(ck('message_seen'), false);
     store.set(ck('known_since'), Date.now());
   }
   if (store.get(ck('known_since'), null) == null) store.set(ck('known_since'), Date.now());
   const forced = inboxElapsedOverride();
   if (forced != null) store.set(ck('known_since'), Date.now() - forced);
+  if (store.get(ck('msg_v'), 0) < 3) {
+    store.set(ck('msg_v'), 3);
+    store.set(ck('msg_since'), Date.now());
+    store.set(ck('message_seen_count'), 0);
+    store.set(ck('message_seen'), false);
+    localStorage.removeItem(ck('messages'));
+  }
+  if (store.get(ck('msg_since'), null) == null) store.set(ck('msg_since'), Date.now());
 }
 function knownMs() {
   const forced = inboxElapsedOverride();
   if (forced != null) return forced;
   return Math.max(0, Date.now() - (store.get(ck('known_since'), Date.now()) || Date.now()));
+}
+function messageMs() {
+  const since = store.get(ck('msg_since'), Date.now()) || Date.now();
+  return Math.max(0, Date.now() - since);
 }
 function unlockedCount(intervalMs, initial, max) {
   return Math.min(max, initial + Math.floor(knownMs() / intervalMs));
@@ -268,6 +278,7 @@ function applyCharacter(id, { resetTrack = true } = {}) {
   bindImg($('#roomBg'), char.assets.roomBackground, '');
   bindImg(characterImg, poseSrc(char.zones[currentZone]?.pose || 'idle'), char.name);
   bindImg(closeImg, char.assets.closeNormal, char.name);
+  preloadCloseSprites();
   bindImg($('#todoCharacterImg'), char.assets.idle, char.name);
   seedTodos();
   renderTodos();
@@ -371,7 +382,9 @@ function updateTime() {
 
 function getMessages() {
   const all = char.messages || [];
-  return all.slice(0, unlockedCount(MSG_INTERVAL_MS, 1, all.length));
+  if (!all.length) return [];
+  const extra = Math.floor(messageMs() / MSG_INTERVAL_MS);
+  return all.slice(0, Math.min(all.length, 1 + extra));
 }
 
 function messageLines(m) {
@@ -727,9 +740,19 @@ function enterRoom({ greetDelay = 700 } = {}) {
 function closeSprite(stage) {
   return [char.assets.closeNormal, char.assets.closeSoft, char.assets.closeHappy][stage] || char.assets.closeNormal;
 }
+function preloadCloseSprites() {
+  [char.assets.closeNormal, char.assets.closeSoft, char.assets.closeHappy].forEach((src) => {
+    if (!src) return;
+    const img = new Image();
+    img.src = src;
+  });
+}
 function applyCloseStage(stage, { speak = false } = {}) {
-  closeStage = Math.max(0, Math.min(2, stage));
+  const next = Math.max(0, Math.min(2, stage));
+  const changed = next !== closeStage;
+  closeStage = next;
   bindImg(closeImg, closeSprite(closeStage), char.name);
+  if (changed) lastStageAt = Date.now();
   if (speak) {
     const key = ['petNormal', 'petSoft', 'petHappy'][closeStage];
     closeLine.textContent = `“${pickLine(key)}”`;
@@ -740,8 +763,6 @@ function flushPetClock() {
   const now = Date.now();
   pettingMs += now - petClockAt;
   petClockAt = now;
-  const cap = (closeStage + 1) * PET_STAGE_MS;
-  if (closeStage < 2 && pettingMs > cap) pettingMs = cap;
 }
 function startPetClock() {
   if (isPetting) return;
@@ -765,13 +786,18 @@ function tickPetClock() {
 }
 function syncPetStage() {
   flushPetClock();
-  if (closeStage < 2 && pettingMs >= (closeStage + 1) * PET_STAGE_MS) {
-    applyCloseStage(closeStage + 1, { speak: true });
-    lastPetLineAt = Date.now();
-  } else if (closeStage === 2 && Date.now() - lastPetLineAt >= PET_LINE_GAP) {
-    applyCloseStage(2, { speak: true });
-    lastPetLineAt = Date.now();
+  const now = Date.now();
+  if (closeStage >= 2) {
+    if (now - lastPetLineAt >= PET_LINE_GAP) {
+      applyCloseStage(2, { speak: true });
+      lastPetLineAt = now;
+    }
+    return;
   }
+  if (pettingMs < PET_STAGE_MS || now - lastStageAt < PET_STAGE_MS) return;
+  applyCloseStage(closeStage + 1, { speak: true });
+  pettingMs = 0;
+  lastPetLineAt = now;
 }
 function holdPetRevert() { clearTimeout(petIdleTimer); }
 function armPetRevert() {
@@ -779,7 +805,7 @@ function armPetRevert() {
   petIdleTimer = setTimeout(() => {
     if (closeStage > 0) {
       applyCloseStage(closeStage - 1);
-      pettingMs = closeStage * PET_STAGE_MS;
+      pettingMs = 0;
       armPetRevert();
     }
   }, PET_REVERT_MS);
@@ -790,10 +816,12 @@ function openClose() {
   pettingMs = 0;
   petClockAt = 0;
   isPetting = false;
+  lastStageAt = Date.now();
   if (petRaf) { cancelAnimationFrame(petRaf); petRaf = 0; }
   lastX = null;
   stroke = 0;
   holdPetRevert();
+  preloadCloseSprites();
   closeScreen.classList.remove('hidden');
   applyCloseStage(0, { speak: true });
 }
